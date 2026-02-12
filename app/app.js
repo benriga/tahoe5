@@ -337,9 +337,10 @@ function renderCourtBody(card) {
 }
 
 function renderAceBody(card) {
+  const logoSrc = card.suit === "S" || card.suit === "C" ? "./assets/tahoe5-logo-bw.png" : "./assets/tahoe-5-logo-1.png";
   return `
     <div class="ace-art">
-      <img class="ace-logo ace-logo-center" src="./assets/tahoe-5-logo-1.png" alt="" aria-hidden="true" />
+      <img class="ace-logo ace-logo-center" src="${logoSrc}" alt="" aria-hidden="true" />
       <div class="ace-ribbon"></div>
     </div>
   `;
