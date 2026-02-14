@@ -1,5 +1,7 @@
 "use strict";
 
+const APP_VERSION = "1.3";
+
 const PAYTABLE = [
   { name: "Royal Flush", base: 2500, key: "royalFlush" },
   { name: "Straight Flush", base: 500, key: "straightFlush" },
@@ -31,9 +33,9 @@ const RANK_TEXT = {
 };
 
 const COURT_IMAGE = {
-  11: "./assets/jack.jpg",
-  12: "./assets/queen.jpg",
-  13: "./assets/king.jpg",
+  11: "./assets/jack.jpg?v=1.2.2",
+  12: "./assets/queen.jpg?v=1.2.2",
+  13: "./assets/king.jpg?v=1.2.2",
 };
 
 const TAUNTS = [
@@ -60,6 +62,7 @@ const state = {
 };
 
 const el = {
+  brandLogo: document.querySelector(".brand-logo"),
   cards: document.getElementById("cards"),
   paytableList: document.getElementById("paytableList"),
   betValue: document.getElementById("betValue"),
@@ -69,11 +72,12 @@ const el = {
   dealDrawBtn: document.getElementById("dealDrawBtn"),
   betUpBtn: document.getElementById("betUpBtn"),
   betDownBtn: document.getElementById("betDownBtn"),
-  infoBtn: document.getElementById("infoBtn"),
+  aboutBtn: document.getElementById("aboutBtn"),
   helpBtn: document.getElementById("helpBtn"),
   soundBtn: document.getElementById("soundBtn"),
-  infoDialog: document.getElementById("infoDialog"),
+  aboutDialog: document.getElementById("aboutDialog"),
   helpDialog: document.getElementById("helpDialog"),
+  versionTag: document.getElementById("versionTag"),
 };
 
 let audioContext;
@@ -167,6 +171,13 @@ function hiBeep() {
   playTone(262, 22, "triangle", 0.04);
 }
 
+function secretModeBeep() {
+  playSequence([
+    { f: 294, d: 28 },
+    { f: 349, d: 34 },
+  ]);
+}
+
 function holdChime() {
   playSequence([
     { f: 740, d: 35 },
@@ -202,6 +213,7 @@ function ensureDrawCapacity() {
 }
 
 function enterSecretRedrawMode() {
+  secretModeBeep();
   state.secretRedrawMode = true;
   state.phase = "HOLD_SELECT";
   setResult("Secret test mode enabled.", "Press 1-5/tap to hold, Enter to redraw, Z to exit.");
@@ -209,10 +221,20 @@ function enterSecretRedrawMode() {
 }
 
 function exitSecretRedrawMode() {
+  secretModeBeep();
   state.secretRedrawMode = false;
   state.phase = "RESULT";
   setResult("Secret test mode disabled.", "Press Enter for next hand, or Z to re-enable.");
   renderAll();
+}
+
+function toggleSecretTestModeShortcut() {
+  if (state.phase !== "RESULT") return;
+  if (state.secretRedrawMode) {
+    exitSecretRedrawMode();
+  } else {
+    enterSecretRedrawMode();
+  }
 }
 
 function freshDeck() {
@@ -634,8 +656,8 @@ function openHelp() {
   if (!el.helpDialog.open) el.helpDialog.showModal();
 }
 
-function openInfo() {
-  if (!el.infoDialog.open) el.infoDialog.showModal();
+function openAbout() {
+  if (!el.aboutDialog.open) el.aboutDialog.showModal();
 }
 
 function resetSession() {
@@ -674,9 +696,10 @@ function wireEvents() {
   el.dealDrawBtn.addEventListener("click", handleEnter);
   el.betUpBtn.addEventListener("click", () => adjustBet(10));
   el.betDownBtn.addEventListener("click", () => adjustBet(-10));
-  el.infoBtn.addEventListener("click", openInfo);
+  el.aboutBtn.addEventListener("click", openAbout);
   el.helpBtn.addEventListener("click", openHelp);
   el.soundBtn.addEventListener("click", toggleSound);
+  el.brandLogo.addEventListener("click", toggleSecretTestModeShortcut);
 
   document.addEventListener("keydown", (e) => {
     const key = e.key;
@@ -695,9 +718,9 @@ function wireEvents() {
       openHelp();
       return;
     }
-    if (key === "i" || key === "I") {
+    if (key === "a" || key === "A") {
       e.preventDefault();
-      openInfo();
+      openAbout();
       return;
     }
     if (key === "s" || key === "S") {
@@ -707,11 +730,7 @@ function wireEvents() {
     }
     if ((key === "z" || key === "Z") && state.phase === "RESULT") {
       e.preventDefault();
-      if (state.secretRedrawMode) {
-        exitSecretRedrawMode();
-      } else {
-        enterSecretRedrawMode();
-      }
+      toggleSecretTestModeShortcut();
       return;
     }
     if (state.phase === "PRE_DEAL") {
@@ -731,6 +750,7 @@ function wireEvents() {
 }
 
 function init() {
+  if (el.versionTag) el.versionTag.textContent = `V${APP_VERSION}`;
   renderPaytable();
   renderAll();
   wireEvents();
